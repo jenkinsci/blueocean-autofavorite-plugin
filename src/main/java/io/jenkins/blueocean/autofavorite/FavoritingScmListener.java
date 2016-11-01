@@ -11,6 +11,7 @@ import hudson.model.User;
 import hudson.model.listeners.SCMListener;
 import hudson.plugins.git.GitChangeLogParser;
 import hudson.plugins.git.GitChangeSet;
+import hudson.plugins.git.GitSCM;
 import hudson.plugins.git.Revision;
 import hudson.plugins.git.util.BuildData;
 import hudson.scm.SCM;
@@ -40,7 +41,8 @@ public class FavoritingScmListener extends SCMListener {
         // Look for the first build of a multibranch job
         if (build instanceof WorkflowRun
                 && ((WorkflowRun) build).getParent().getParent() instanceof MultiBranchProject
-                && build.getNumber() == 1) {
+                && build.getNumber() == 1
+                && scm instanceof GitSCM) {
 
             BuildData buildData = build.getAction(BuildData.class);
             Revision lastBuiltRevision = buildData.getLastBuiltRevision();
