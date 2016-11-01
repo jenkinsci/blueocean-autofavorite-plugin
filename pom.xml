@@ -11,11 +11,40 @@
     <artifactId>blueocean-autofavorite</artifactId>
     <version>1.0-SNAPSHOT</version>
 
+    <description>Automatically favorites multibranch pipeline jobs when user is the author</description>
+    <url>https://wiki.jenkins-ci.org/display/JENKINS/Blue+Ocean+Autofavorite+Plugin</url>
+
+    <properties>
+        <blueocean.version>1.0.0-b11-SNAPSHOT</blueocean.version>
+    </properties>
+
+    <scm>
+        <connection>scm:git:ssh://github.com/jenkinsci/blueocean-autofavorite-plugin.git</connection>
+        <developerConnection>scm:git:ssh://git@github.com/jenkinsci/blueocean-autofavorite-plugin.git</developerConnection>
+        <url>https://github.com/jenkinsci/blueocean-autofavorite-plugin</url>
+        <tag>HEAD</tag>
+    </scm>
+
+    <licenses>
+        <license>
+            <name>MIT License</name>
+            <url>http://opensource.org/licenses/MIT</url>
+        </license>
+    </licenses>
+
+    <developers>
+        <developer>
+            <id>jdumay</id>
+            <name>James Dumay</name>
+            <email>jdumay@cloudbees.com</email>
+        </developer>
+    </developers>
+
     <dependencies>
         <dependency>
             <groupId>io.jenkins.blueocean</groupId>
             <artifactId>blueocean-pipeline-api-impl</artifactId>
-            <version>1.0.0-b11-SNAPSHOT</version>
+            <version>${blueocean.version}</version>
         </dependency>
     </dependencies>
 </project>
