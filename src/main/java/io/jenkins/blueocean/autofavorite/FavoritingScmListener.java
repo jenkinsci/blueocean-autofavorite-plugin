@@ -31,9 +31,9 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 @Extension
-public class FavouritingScmListener extends SCMListener {
+public class FavoritingScmListener extends SCMListener {
 
-    private final Logger logger = Logger.getLogger(FavouritingScmListener.class.getName());
+    private final Logger logger = Logger.getLogger(FavoritingScmListener.class.getName());
 
     @Override
     public void onCheckout(Run<?, ?> build, SCM scm, FilePath workspace, TaskListener listener, @CheckForNull File changelogFile, @CheckForNull SCMRevisionState pollingBaseline) throws Exception {
