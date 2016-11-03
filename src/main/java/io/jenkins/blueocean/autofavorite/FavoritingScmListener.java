@@ -9,6 +9,7 @@ import hudson.model.Run;
 import hudson.model.TaskListener;
 import hudson.model.User;
 import hudson.model.listeners.SCMListener;
+import hudson.plugins.favorite.Favorites;
 import hudson.plugins.git.GitChangeLogParser;
 import hudson.plugins.git.GitChangeSet;
 import hudson.plugins.git.GitSCM;
@@ -16,7 +17,6 @@ import hudson.plugins.git.Revision;
 import hudson.plugins.git.util.BuildData;
 import hudson.scm.SCM;
 import hudson.scm.SCMRevisionState;
-import io.jenkins.blueocean.service.embedded.util.FavoriteUtil;
 import jenkins.branch.MultiBranchProject;
 import org.apache.commons.io.IOUtils;
 import org.jenkinsci.plugins.gitclient.Git;
@@ -32,9 +32,9 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 @Extension
-public class FavoritingScmListener extends SCMListener {
+public class FavoritingSCMListener extends SCMListener {
 
-    private final Logger logger = Logger.getLogger(FavoritingScmListener.class.getName());
+    private final Logger logger = Logger.getLogger(FavoritingSCMListener.class.getName());
 
     @Override
     public void onCheckout(Run<?, ?> build, SCM scm, FilePath workspace, TaskListener listener, @CheckForNull File changelogFile, @CheckForNull SCMRevisionState pollingBaseline) throws Exception {
@@ -72,8 +72,8 @@ public class FavoritingScmListener extends SCMListener {
             if (first != null) {
                 Job<?, ?> job = build.getParent();
                 User author = first.getAuthor();
-                if (!User.getUnknown().equals(author) && !FavoriteUtil.hasFavourite(author, job)) {
-                    FavoriteUtil.favoriteJob(job, author, true);
+                if (!User.getUnknown().equals(author) && !Favorites.hasFavorite(author, job) && !Favorites.isFavorite(author, job)) {
+                    Favorites.addFavorite(author, job);
                     logger.log(Level.INFO, "Automatically favorited " + job.getFullName() + " for " + author);
                 }
             }
