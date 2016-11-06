@@ -32,7 +32,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 @Extension
-public class FavoritingSCMListener extends SCMListener {
+public class FavoritingScmListener extends SCMListener {
 
     private final Logger logger = Logger.getLogger(FavoritingSCMListener.class.getName());
 
