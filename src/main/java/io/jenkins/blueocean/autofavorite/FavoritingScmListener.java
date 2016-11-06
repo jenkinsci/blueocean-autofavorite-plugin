@@ -46,7 +46,7 @@ public class FavoritingScmListener extends SCMListener {
 
             BuildData buildData = build.getAction(BuildData.class);
             Revision lastBuiltRevision = buildData.getLastBuiltRevision();
-
+            if (lastBuiltRevision == null) return;
             GitClient git = Git.with(TaskListener.NULL, new EnvVars())
                     .in(new File(workspace.getRemote()))
                     .getClient();
