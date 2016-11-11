@@ -39,44 +39,50 @@ public class FavoritingScmListener extends SCMListener {
     @Override
     public void onCheckout(Run<?, ?> build, SCM scm, FilePath workspace, TaskListener listener, @CheckForNull File changelogFile, @CheckForNull SCMRevisionState pollingBaseline) throws Exception {
         // Look for the first build of a multibranch job
-        if (build instanceof WorkflowRun
+        if (!(build instanceof WorkflowRun
                 && ((WorkflowRun) build).getParent().getParent() instanceof MultiBranchProject
                 && build.getNumber() == 1
-                && scm instanceof GitSCM) {
+                && scm instanceof GitSCM)) {
+            return;
+        }
 
-            BuildData buildData = build.getAction(BuildData.class);
-            Revision lastBuiltRevision = buildData.getLastBuiltRevision();
-            if (lastBuiltRevision == null) return;
-            GitClient git = Git.with(TaskListener.NULL, new EnvVars())
-                    .in(new File(workspace.getRemote()))
-                    .getClient();
+        BuildData buildData = build.getAction(BuildData.class);
+        Revision lastBuiltRevision = buildData.getLastBuiltRevision();
+        if (lastBuiltRevision == null) {
+            return;
+        }
 
-            List<GitChangeSet> changeSets;
-            try (StringWriter writer = new StringWriter()) {
-                // Fetch the first commit
-                git.changelog()
-                        .includes(lastBuiltRevision.getSha1())
-                        .to(writer)
-                        .max(1)
-                        .execute();
+        GitClient git = Git.with(TaskListener.NULL, new EnvVars())
+                .in(new File(workspace.getRemote()))
+                .getClient();
 
-                // Parse the changelog
-                GitChangeLogParser parser = new GitChangeLogParser(true);
-                try (StringReader input = new StringReader(writer.toString())) {
-                    List<String> lines = IOUtils.readLines(input);
-                    changeSets = parser.parse(lines);
-                }
+        List<GitChangeSet> changeSets;
+        try (StringWriter writer = new StringWriter()) {
+            // Fetch the first commit
+            git.changelog()
+                    .includes(lastBuiltRevision.getSha1())
+                    .to(writer)
+                    .max(1)
+                    .execute();
+
+            // Parse the changelog
+            GitChangeLogParser parser = new GitChangeLogParser(true);
+            try (StringReader input = new StringReader(writer.toString())) {
+                List<String> lines = IOUtils.readLines(input);
+                changeSets = parser.parse(lines);
             }
+        }
 
-            GitChangeSet first = Iterables.getOnlyElement(changeSets, null);
-            if (first != null) {
-                Job<?, ?> job = build.getParent();
-                User author = first.getAuthor();
-                if (!User.getUnknown().equals(author) && !Favorites.hasFavorite(author, job) && !Favorites.isFavorite(author, job)) {
-                    Favorites.addFavorite(author, job);
-                    logger.log(Level.INFO, "Automatically favorited " + job.getFullName() + " for " + author);
-                }
-            }
+        GitChangeSet first = Iterables.getOnlyElement(changeSets, null);
+        if (first == null) {
+            return;
+        }
+
+        Job<?, ?> job = build.getParent();
+        User author = first.getAuthor();
+        if (!User.getUnknown().equals(author) && !Favorites.hasFavorite(author, job) && !Favorites.isFavorite(author, job)) {
+            Favorites.addFavorite(author, job);
+            logger.log(Level.INFO, "Automatically favorited " + job.getFullName() + " for " + author);
         }
     }
 }
