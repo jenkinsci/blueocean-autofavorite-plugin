@@ -1,3 +1,4 @@
+<?jelly escape-by-default='true'?>
 <div>
   Automatically favorites multibranch pipeline jobs when user is the author
 </div>
