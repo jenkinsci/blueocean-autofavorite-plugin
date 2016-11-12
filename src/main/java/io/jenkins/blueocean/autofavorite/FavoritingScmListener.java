@@ -80,9 +80,18 @@ public class FavoritingScmListener extends SCMListener {
 
         Job<?, ?> job = build.getParent();
         User author = first.getAuthor();
-        if (!User.getUnknown().equals(author) && !Favorites.hasFavorite(author, job) && !Favorites.isFavorite(author, job)) {
-            Favorites.addFavorite(author, job);
-            logger.log(Level.INFO, "Automatically favorited " + job.getFullName() + " for " + author);
+
+        // User does not exist or is unknown
+        if (User.getById(author.getId(), false) == null || User.getUnknown().equals(author)) {
+            return;
         }
+
+        // This user has previously favorited this job but has removed the favorite
+        if (Favorites.hasFavorite(author, job) && !Favorites.isFavorite(author, job)) {
+            return;
+        }
+
+        Favorites.addFavorite(author, job);
+        logger.log(Level.INFO, "Automatically favorited " + job.getFullName() + " for " + author);
     }
 }
