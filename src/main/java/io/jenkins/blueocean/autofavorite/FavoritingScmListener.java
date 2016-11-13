@@ -1,6 +1,7 @@
 package io.jenkins.blueocean.autofavorite;
 
 import com.google.common.collect.Iterables;
+import com.google.inject.Inject;
 import hudson.EnvVars;
 import hudson.Extension;
 import hudson.FilePath;
@@ -10,6 +11,7 @@ import hudson.model.TaskListener;
 import hudson.model.User;
 import hudson.model.listeners.SCMListener;
 import hudson.plugins.favorite.Favorites;
+import hudson.plugins.favorite.Favorites.FavoriteException;
 import hudson.plugins.git.GitChangeLogParser;
 import hudson.plugins.git.GitChangeSet;
 import hudson.plugins.git.GitSCM;
@@ -17,13 +19,20 @@ import hudson.plugins.git.Revision;
 import hudson.plugins.git.util.BuildData;
 import hudson.scm.SCM;
 import hudson.scm.SCMRevisionState;
+import hudson.tasks.Mailer.UserProperty;
 import jenkins.branch.MultiBranchProject;
 import org.apache.commons.io.IOUtils;
 import org.jenkinsci.plugins.gitclient.Git;
 import org.jenkinsci.plugins.gitclient.GitClient;
+import org.jenkinsci.plugins.mailaliases.MailAlias;
+import org.jenkinsci.plugins.mailaliases.MailAliasUserSearch;
+import org.jenkinsci.plugins.mailaliases.MailAliasUserSearch.OnResult;
+import org.jenkinsci.plugins.mailaliases.MailAliasesUserProperty;
 import org.jenkinsci.plugins.workflow.job.WorkflowRun;
 
 import javax.annotation.CheckForNull;
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import java.io.File;
 import java.io.StringReader;
 import java.io.StringWriter;
@@ -81,17 +90,43 @@ public class FavoritingScmListener extends SCMListener {
         Job<?, ?> job = build.getParent();
         User author = first.getAuthor();
 
-        // User does not exist or is unknown
+        // User does not exist or is unknown search for its email alias
         if (User.getById(author.getId(), false) == null || User.getUnknown().equals(author)) {
-            return;
+            String email = getEmail(first);
+            author = email != null ? findUserByEmailAlias(email) : null;
         }
+        if (author != null) {
+            setFavorite(job, author);
+        }
+    }
 
+    private void setFavorite(Job<?, ?> job, User author) throws FavoriteException {
         // This user has previously favorited this job but has removed the favorite
-        if (Favorites.hasFavorite(author, job) && !Favorites.isFavorite(author, job)) {
+        if (!Favorites.hasFavorite(author, job) && !Favorites.isFavorite(author, job)) {
             return;
         }
-
         Favorites.addFavorite(author, job);
         logger.log(Level.INFO, "Automatically favorited " + job.getFullName() + " for " + author);
+    }
+
+    @Nullable
+    private String getEmail(@Nonnull GitChangeSet changeSet) {
+        UserProperty property = changeSet.getAuthor().getProperty(UserProperty.class);
+        return property != null ? property.getConfiguredAddress() : null;
+    }
+
+    @Nullable
+    private User findUserByEmailAlias(@Nonnull String email) {
+        for (User user : User.getAll()) {
+            MailAliasesUserProperty aliasesUserProperty = user.getProperty(MailAliasesUserProperty.class);
+            if (aliasesUserProperty != null) {
+                for (MailAlias alias : aliasesUserProperty.getMailAliases()) {
+                    if (alias != null && alias.getEmail().equalsIgnoreCase(email)) {
+                        return user;
+                    }
+                }
+            }
+        }
+        return null;
     }
 }
