@@ -40,8 +40,7 @@ public class FavoritingScmListenerTest {
         assertNull(User.getById("jdumay", false));
         WorkflowJob job = createAndRunPipeline();
         User user = User.getById("jdumay", false);
-        assertNotNull(user);
-        assertFalse(Favorites.isFavorite(user, job));
+        assertNull(User.getById("jdumay", false));
     }
 
     private WorkflowJob createAndRunPipeline() throws java.io.IOException, InterruptedException {
