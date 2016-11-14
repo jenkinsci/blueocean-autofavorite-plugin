@@ -19,15 +19,18 @@ import hudson.scm.SCM;
 import hudson.scm.SCMRevisionState;
 import jenkins.branch.MultiBranchProject;
 import org.apache.commons.io.IOUtils;
+import org.eclipse.jgit.errors.MissingObjectException;
 import org.jenkinsci.plugins.gitclient.Git;
 import org.jenkinsci.plugins.gitclient.GitClient;
 import org.jenkinsci.plugins.workflow.job.WorkflowRun;
 
 import javax.annotation.CheckForNull;
 import java.io.File;
+import java.io.IOException;
 import java.io.StringReader;
 import java.io.StringWriter;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -52,6 +55,42 @@ public class FavoritingScmListener extends SCMListener {
             return;
         }
 
+        // Sometimes the Git repository isn't consistent so we need to retry (JENKINS-39704)
+        GitChangeSet first;
+        try {
+            first = getChangeSet(workspace, lastBuiltRevision);
+        } catch (MissingObjectException e) {
+            // Wait before we retry...
+            Thread.sleep(TimeUnit.SECONDS.toMillis(2));
+            try {
+                first = getChangeSet(workspace, lastBuiltRevision);
+            } catch (MissingObjectException ex) {
+                logger.log(Level.SEVERE, "Git repository is not consistent. Can't get the changeset that was just checked out.", ex);
+                first = null;
+            }
+        }
+        if (first == null) {
+            return;
+        }
+
+        Job<?, ?> job = build.getParent();
+        User author = first.getAuthor();
+
+        // User does not exist or is unknown
+        if (User.getById(author.getId(), false) == null || User.getUnknown().equals(author)) {
+            return;
+        }
+
+        // This user has previously favorited this job but has removed the favorite
+        if (Favorites.hasFavorite(author, job) && !Favorites.isFavorite(author, job)) {
+            return;
+        }
+
+        Favorites.addFavorite(author, job);
+        logger.log(Level.INFO, "Automatically favorited " + job.getFullName() + " for " + author);
+    }
+
+    private GitChangeSet getChangeSet(FilePath workspace, Revision lastBuiltRevision) throws IOException, InterruptedException {
         GitClient git = Git.with(TaskListener.NULL, new EnvVars())
                 .in(new File(workspace.getRemote()))
                 .getClient();
@@ -72,26 +111,6 @@ public class FavoritingScmListener extends SCMListener {
                 changeSets = parser.parse(lines);
             }
         }
-
-        GitChangeSet first = Iterables.getOnlyElement(changeSets, null);
-        if (first == null) {
-            return;
-        }
-
-        Job<?, ?> job = build.getParent();
-        User author = first.getAuthor();
-
-        // User does not exist or is unknown
-        if (User.getById(author.getId(), false) == null || User.getUnknown().equals(author)) {
-            return;
-        }
-
-        // This user has previously favorited this job but has removed the favorite
-        if (Favorites.hasFavorite(author, job) && !Favorites.isFavorite(author, job)) {
-            return;
-        }
-
-        Favorites.addFavorite(author, job);
-        logger.log(Level.INFO, "Automatically favorited " + job.getFullName() + " for " + author);
+        return Iterables.getOnlyElement(changeSets, null);
     }
 }
