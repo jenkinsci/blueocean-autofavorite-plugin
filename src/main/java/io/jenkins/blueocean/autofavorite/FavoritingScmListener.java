@@ -62,12 +62,17 @@ public class FavoritingScmListener extends SCMListener {
         try {
             first = getChangeSet(workspace, lastBuiltRevision);
         } catch (GitException e) {
-            // Wait before we retry...
-            Thread.sleep(TimeUnit.SECONDS.toMillis(2));
-            try {
-                first = getChangeSet(workspace, lastBuiltRevision);
-            } catch (GitException ex) {
-                logger.log(Level.SEVERE, "Git repository is not consistent. Can't get the changeset that was just checked out.", ex);
+            if (e.getCause() instanceof MissingObjectException) {
+                // Wait before we retry...
+                Thread.sleep(TimeUnit.SECONDS.toMillis(2));
+                try {
+                    first = getChangeSet(workspace, lastBuiltRevision);
+                } catch (GitException ex) {
+                    logger.log(Level.SEVERE, "Git repository is not consistent. Can't get the changeset that was just checked out.", ex);
+                    first = null;
+                }
+            } else {
+                logger.log(Level.SEVERE, "Unexpected error when retrieving changeset", e);
                 first = null;
             }
         }
