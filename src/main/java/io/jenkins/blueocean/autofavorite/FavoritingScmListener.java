@@ -12,6 +12,7 @@ import hudson.model.listeners.SCMListener;
 import hudson.plugins.favorite.Favorites;
 import hudson.plugins.git.GitChangeLogParser;
 import hudson.plugins.git.GitChangeSet;
+import hudson.plugins.git.GitException;
 import hudson.plugins.git.GitSCM;
 import hudson.plugins.git.Revision;
 import hudson.plugins.git.util.BuildData;
@@ -59,12 +60,12 @@ public class FavoritingScmListener extends SCMListener {
         GitChangeSet first;
         try {
             first = getChangeSet(workspace, lastBuiltRevision);
-        } catch (MissingObjectException e) {
+        } catch (GitException e) {
             // Wait before we retry...
             Thread.sleep(TimeUnit.SECONDS.toMillis(2));
             try {
                 first = getChangeSet(workspace, lastBuiltRevision);
-            } catch (MissingObjectException ex) {
+            } catch (GitException ex) {
                 logger.log(Level.SEVERE, "Git repository is not consistent. Can't get the changeset that was just checked out.", ex);
                 first = null;
             }
