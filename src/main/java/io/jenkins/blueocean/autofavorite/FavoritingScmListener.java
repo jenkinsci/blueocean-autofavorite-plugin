@@ -83,9 +83,15 @@ public class FavoritingScmListener extends SCMListener {
             return;
         }
 
-        // This user has previously favorited this job but has removed the favorite
-        // or the job is already a favorite
-        if ((Favorites.hasFavorite(author, job) && !Favorites.isFavorite(author, job)) || Favorites.isFavorite(author, job)) {
+        // If the user has already favorited then unfavorited it we should not favorite it again
+        if (Favorites.hasFavorite(author, job) && !Favorites.isFavorite(author, job)) {
+            return;
+        }
+
+        // Do not try to favorite if its already a favorite
+        // As shown in JENKINS-39803 with docker-workflow, there are 2 checkouts: one to get the Jenknsfile
+        // and another to checkout the source within the container, of which this listener will get run twice.
+        if (Favorites.isFavorite(author, job)) {
             return;
         }
 
