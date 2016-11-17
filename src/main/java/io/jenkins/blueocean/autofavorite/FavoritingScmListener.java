@@ -84,7 +84,8 @@ public class FavoritingScmListener extends SCMListener {
         }
 
         // This user has previously favorited this job but has removed the favorite
-        if (Favorites.hasFavorite(author, job) && !Favorites.isFavorite(author, job)) {
+        // or the job is already a favorite
+        if ((Favorites.hasFavorite(author, job) && !Favorites.isFavorite(author, job)) || !Favorites.isFavorite(author, job)) {
             return;
         }
 
