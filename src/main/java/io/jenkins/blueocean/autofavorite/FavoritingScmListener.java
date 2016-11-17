@@ -10,6 +10,7 @@ import hudson.model.TaskListener;
 import hudson.model.User;
 import hudson.model.listeners.SCMListener;
 import hudson.plugins.favorite.Favorites;
+import hudson.plugins.favorite.Favorites.FavoriteException;
 import hudson.plugins.git.GitChangeLogParser;
 import hudson.plugins.git.GitChangeSet;
 import hudson.plugins.git.GitException;
@@ -87,8 +88,13 @@ public class FavoritingScmListener extends SCMListener {
             return;
         }
 
-        Favorites.addFavorite(author, job);
-        logger.log(Level.INFO, "Automatically favorited " + job.getFullName() + " for " + author);
+        // If the user favourites the Job before we get a chance to then an exception could be thrown, failing the run.
+        try {
+            Favorites.addFavorite(author, job);
+            logger.log(Level.INFO, "Automatically favorited " + job.getFullName() + " for " + author);
+        } catch (FavoriteException e) {
+            logger.log(Level.SEVERE, "Couldn't favourite " + job.getFullName() + " for " + author, e);
+        }
     }
 
     private GitChangeSet getChangeSet(FilePath workspace, Revision lastBuiltRevision) throws IOException, InterruptedException {
