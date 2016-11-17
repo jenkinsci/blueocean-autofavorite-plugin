@@ -10,6 +10,7 @@ import hudson.model.TaskListener;
 import hudson.model.User;
 import hudson.model.listeners.SCMListener;
 import hudson.plugins.favorite.Favorites;
+import hudson.plugins.favorite.Favorites.FavoriteException;
 import hudson.plugins.git.GitChangeLogParser;
 import hudson.plugins.git.GitChangeSet;
 import hudson.plugins.git.GitException;
@@ -82,13 +83,25 @@ public class FavoritingScmListener extends SCMListener {
             return;
         }
 
-        // This user has previously favorited this job but has removed the favorite
+        // If the user has already favorited then unfavorited it we should not favorite it again
         if (Favorites.hasFavorite(author, job) && !Favorites.isFavorite(author, job)) {
             return;
         }
 
-        Favorites.addFavorite(author, job);
-        logger.log(Level.INFO, "Automatically favorited " + job.getFullName() + " for " + author);
+        // Do not try to favorite if its already a favorite
+        // As shown in JENKINS-39803 with docker-workflow, there are 2 checkouts: one to get the Jenknsfile
+        // and another to checkout the source within the container, of which this listener will get run twice.
+        if (Favorites.isFavorite(author, job)) {
+            return;
+        }
+
+        // If the user favourites the Job before we get a chance to then an exception could be thrown, failing the run.
+        try {
+            Favorites.addFavorite(author, job);
+            logger.log(Level.INFO, "Automatically favorited " + job.getFullName() + " for " + author);
+        } catch (FavoriteException e) {
+            logger.log(Level.SEVERE, "Couldn't favourite " + job.getFullName() + " for " + author, e);
+        }
     }
 
     private GitChangeSet getChangeSet(FilePath workspace, Revision lastBuiltRevision) throws IOException, InterruptedException {
