@@ -15,10 +15,12 @@ import hudson.plugins.git.GitChangeLogParser;
 import hudson.plugins.git.GitChangeSet;
 import hudson.plugins.git.GitException;
 import hudson.plugins.git.GitSCM;
+import hudson.plugins.git.GitTool;
 import hudson.plugins.git.Revision;
 import hudson.plugins.git.util.BuildData;
 import hudson.scm.SCM;
 import hudson.scm.SCMRevisionState;
+import hudson.util.LogTaskListener;
 import jenkins.branch.MultiBranchProject;
 import org.apache.commons.io.IOUtils;
 import org.eclipse.jgit.errors.MissingObjectException;
@@ -39,7 +41,7 @@ import java.util.logging.Logger;
 @Extension
 public class FavoritingScmListener extends SCMListener {
 
-    private final Logger logger = Logger.getLogger(FavoritingScmListener.class.getName());
+    private static final Logger LOGGER = Logger.getLogger(FavoritingScmListener.class.getName());
 
     @Override
     public void onCheckout(Run<?, ?> build, SCM scm, FilePath workspace, TaskListener listener, @CheckForNull File changelogFile, @CheckForNull SCMRevisionState pollingBaseline) throws Exception {
@@ -57,22 +59,24 @@ public class FavoritingScmListener extends SCMListener {
             return;
         }
 
+        GitSCM gitSCM = (GitSCM)scm;
+
         // Sometimes the Git repository isn't consistent so we need to retry (JENKINS-39704)
         GitChangeSet first;
         try {
-            first = getChangeSet(workspace, lastBuiltRevision);
+            first = getChangeSet(gitSCM, workspace, lastBuiltRevision);
         } catch (GitException e) {
             if (e.getCause() instanceof MissingObjectException) {
                 // Wait before we retry...
                 Thread.sleep(TimeUnit.SECONDS.toMillis(2));
                 try {
-                    first = getChangeSet(workspace, lastBuiltRevision);
+                    first = getChangeSet(gitSCM, workspace, lastBuiltRevision);
                 } catch (GitException ex) {
-                    logger.log(Level.SEVERE, "Git repository is not consistent. Can't get the changeset that was just checked out.", ex);
+                    LOGGER.log(Level.SEVERE, "Git repository is not consistent. Can't get the changeset that was just checked out.", ex);
                     first = null;
                 }
             } else {
-                logger.log(Level.SEVERE, "Unexpected error when retrieving changeset", e);
+                LOGGER.log(Level.SEVERE, "Unexpected error when retrieving changeset", e);
                 first = null;
             }
         }
@@ -103,16 +107,25 @@ public class FavoritingScmListener extends SCMListener {
         // If the user favourites the Job before we get a chance to then an exception could be thrown, failing the run.
         try {
             Favorites.addFavorite(author, job);
-            logger.log(Level.INFO, "Automatically favorited " + job.getFullName() + " for " + author);
+            LOGGER.log(Level.INFO, "Automatically favorited " + job.getFullName() + " for " + author);
         } catch (FavoriteException e) {
-            logger.log(Level.SEVERE, "Couldn't favourite " + job.getFullName() + " for " + author, e);
+            LOGGER.log(Level.SEVERE, "Couldn't favourite " + job.getFullName() + " for " + author, e);
         }
     }
 
-    private GitChangeSet getChangeSet(FilePath workspace, Revision lastBuiltRevision) throws IOException, InterruptedException {
-        GitClient git = Git.with(TaskListener.NULL, new EnvVars())
-                .in(new File(workspace.getRemote()))
-                .getClient();
+    private GitChangeSet getChangeSet(GitSCM scm, FilePath workspace, Revision lastBuiltRevision) throws IOException, InterruptedException {
+        Git gitBuilder = Git.with(TaskListener.NULL, new EnvVars())
+                .in(new File(workspace.getRemote()));
+
+        GitTool tool = scm.resolveGitTool(new LogTaskListener(LOGGER, Level.FINE));
+        if (tool != null) {
+            LOGGER.log(Level.FINE, "Using Git executable for autofavorite");
+            gitBuilder = gitBuilder.using(tool.getGitExe());
+        } else {
+            LOGGER.log(Level.INFO, "Using JGit for autofavorite. This is less reliable than using the Git executable. You should define a Git tool, see https://jenkins.io/doc/book/managing/tools/");
+        }
+
+        GitClient git = gitBuilder.getClient();
 
         List<GitChangeSet> changeSets;
         try (StringWriter writer = new StringWriter()) {
