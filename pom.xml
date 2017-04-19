@@ -11,6 +11,7 @@
     <artifactId>blueocean-autofavorite</artifactId>
     <version>0.7-SNAPSHOT</version>
 
+    <name>Autofavorite for Blue Ocean</name>
     <description>Automatically favorites multibranch pipeline jobs when user is the author</description>
     <url>https://wiki.jenkins-ci.org/display/JENKINS/Blue+Ocean+Autofavorite+Plugin</url>
     <packaging>hpi</packaging>
