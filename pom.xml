@@ -17,7 +17,6 @@
     <packaging>hpi</packaging>
 
     <properties>
-        <blueocean.version>1.0.0-b11-SNAPSHOT</blueocean.version>
         <jenkins.version>2.7.1</jenkins.version>
     </properties>
 
