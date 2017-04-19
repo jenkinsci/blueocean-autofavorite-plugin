@@ -53,6 +53,12 @@ public class FavoritingScmListener extends SCMListener {
             return;
         }
 
+        // Bail out if the workspace does not exist or is not a directory
+        if (!workspace.exists() || !workspace.isDirectory()) {
+            LOGGER.fine("Workspace '" + workspace.getRemote() + "' does not exist or is a directory. Favoriting cannot be run.");
+            return;
+        }
+
         BuildData buildData = build.getAction(BuildData.class);
         Revision lastBuiltRevision = buildData.getLastBuiltRevision();
         if (lastBuiltRevision == null) {
