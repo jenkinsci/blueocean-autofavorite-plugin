@@ -121,7 +121,7 @@ public class FavoritingScmListener extends SCMListener {
 
     private GitChangeSet getChangeSet(GitSCM scm, FilePath workspace, Revision lastBuiltRevision) throws IOException, InterruptedException {
         Git gitBuilder = Git.with(TaskListener.NULL, new EnvVars())
-                .in(new File(workspace.getRemote()));
+                .in(workspace);
 
         GitTool tool = scm.resolveGitTool(new LogTaskListener(LOGGER, Level.FINE));
         if (tool != null) {
