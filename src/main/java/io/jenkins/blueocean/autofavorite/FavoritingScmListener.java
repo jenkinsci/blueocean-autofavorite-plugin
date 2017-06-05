@@ -70,13 +70,13 @@ public class FavoritingScmListener extends SCMListener {
         // Sometimes the Git repository isn't consistent so we need to retry (JENKINS-39704)
         GitChangeSet first;
         try {
-            first = getChangeSet(gitSCM, workspace, lastBuiltRevision);
+            first = getChangeSet(gitSCM, workspace, lastBuiltRevision, listener);
         } catch (GitException e) {
             if (e.getCause() instanceof MissingObjectException) {
                 // Wait before we retry...
                 Thread.sleep(TimeUnit.SECONDS.toMillis(2));
                 try {
-                    first = getChangeSet(gitSCM, workspace, lastBuiltRevision);
+                    first = getChangeSet(gitSCM, workspace, lastBuiltRevision, listener);
                 } catch (GitException ex) {
                     LOGGER.log(Level.SEVERE, "Git repository is not consistent. Can't get the changeset that was just checked out.", ex);
                     first = null;
@@ -119,8 +119,8 @@ public class FavoritingScmListener extends SCMListener {
         }
     }
 
-    private GitChangeSet getChangeSet(GitSCM scm, FilePath workspace, Revision lastBuiltRevision) throws IOException, InterruptedException {
-        Git gitBuilder = Git.with(TaskListener.NULL, new EnvVars())
+    private GitChangeSet getChangeSet(GitSCM scm, FilePath workspace, Revision lastBuiltRevision, TaskListener listener) throws IOException, InterruptedException {
+        Git gitBuilder = Git.with(listener, new EnvVars())
                 .in(workspace);
 
         GitTool tool = scm.resolveGitTool(new LogTaskListener(LOGGER, Level.FINE));
