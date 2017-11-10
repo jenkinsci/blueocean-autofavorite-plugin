@@ -3,23 +3,18 @@ package io.jenkins.blueocean.autofavorite;
 import hudson.model.Result;
 import hudson.model.User;
 import hudson.plugins.favorite.Favorites;
+import java.util.concurrent.TimeUnit;
 import jenkins.branch.BranchSource;
 import jenkins.branch.MultiBranchProject.BranchIndexing;
 import jenkins.plugins.git.GitSCMSource;
+import jenkins.plugins.git.traits.BranchDiscoveryTrait;
 import org.jenkinsci.plugins.workflow.job.WorkflowJob;
 import org.jenkinsci.plugins.workflow.job.WorkflowRun;
 import org.jenkinsci.plugins.workflow.multibranch.WorkflowMultiBranchProject;
 import org.junit.Rule;
 import org.junit.Test;
 import org.jvnet.hudson.test.JenkinsRule;
-
-import java.util.concurrent.TimeUnit;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 public class FavoritingScmListenerTest {
     @Rule
@@ -45,7 +40,10 @@ public class FavoritingScmListenerTest {
 
     private WorkflowJob createAndRunPipeline() throws java.io.IOException, InterruptedException {
         WorkflowMultiBranchProject mbp = j.createProject(WorkflowMultiBranchProject.class, "WorkflowMultiBranchProject");
-        mbp.getSourcesList().add(new BranchSource(new GitSCMSource(null, "https://github.com/i386/feedle.git", "", "*", "", true)));
+        GitSCMSource gitSCMSource = new GitSCMSource("https://github.com/i386/feedle.git");
+        gitSCMSource.setCredentialsId("");
+        gitSCMSource.getTraits().add(new BranchDiscoveryTrait());
+        mbp.getSourcesList().add(new BranchSource(gitSCMSource));
 
         BranchIndexing<WorkflowJob, WorkflowRun> indexing = mbp.getIndexing();
         indexing.run();
