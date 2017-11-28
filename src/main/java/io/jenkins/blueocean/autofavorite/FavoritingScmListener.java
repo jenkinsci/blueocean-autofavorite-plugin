@@ -100,7 +100,7 @@ public class FavoritingScmListener extends SCMListener {
         }
 
         // If the user has disabled auto-favoriting then we should bail out
-        if (!FavoritingUserProperty.from(author).isEnabled()) {
+        if (!FavoritingUserProperty.from(author).isAutofavoriteEnabled()) {
             return;
         }
 

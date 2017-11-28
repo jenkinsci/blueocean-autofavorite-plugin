@@ -1,5 +1,6 @@
 package io.jenkins.blueocean.autofavorite.user;
 
+import com.google.common.annotations.VisibleForTesting;
 import hudson.Extension;
 import hudson.model.User;
 import hudson.model.UserProperty;
@@ -11,23 +12,29 @@ import javax.annotation.Nonnull;
 
 public class FavoritingUserProperty extends UserProperty {
 
-    private boolean enabled = true;
+    private boolean autofavoriteEnabled;
 
     @DataBoundConstructor
-    public FavoritingUserProperty(boolean enabled) {
-        this.enabled = enabled;
+    public FavoritingUserProperty(boolean autofavoriteEnabled) {
+        this.autofavoriteEnabled = autofavoriteEnabled;
     }
 
-    public boolean isEnabled() {
-        return enabled;
+    public boolean isAutofavoriteEnabled() {
+        return autofavoriteEnabled;
     }
 
-    public void setEnabled(boolean enabled) {
-        this.enabled = enabled;
+    @VisibleForTesting
+    public void setAutofavoriteEnabled(boolean autofavoriteEnabled) {
+        this.autofavoriteEnabled = autofavoriteEnabled;
     }
 
     @Extension
     public static class DescriptorImpl extends UserPropertyDescriptor {
+
+        public DescriptorImpl() {
+            super(FavoritingUserProperty.class);
+        }
+
         @Override
         public UserProperty newInstance(User user) {
             return new FavoritingUserProperty(true);

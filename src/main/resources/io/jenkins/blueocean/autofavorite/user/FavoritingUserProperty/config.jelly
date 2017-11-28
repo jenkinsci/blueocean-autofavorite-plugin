@@ -3,7 +3,7 @@
          xmlns:t="/lib/hudson" xmlns:f="/lib/form">
   <f:block>
     <f:entry name="auto-fav-enabled" field="enabled">
-        <f:checkbox title="${%autofavorite.enabled}" name="auto-fav-enabled" checked="${instance.enabled}"/>
+        <f:checkbox title="${%autofavorite.autofavoriteEnabled}" name="auto-fav-enabled" checked="${instance.enabled}"/>
     </f:entry>
   </f:block>
 </j:jelly>
