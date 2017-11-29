@@ -13,6 +13,7 @@ import jenkins.plugins.git.traits.BranchDiscoveryTrait;
 import org.jenkinsci.plugins.workflow.job.WorkflowJob;
 import org.jenkinsci.plugins.workflow.job.WorkflowRun;
 import org.jenkinsci.plugins.workflow.multibranch.WorkflowMultiBranchProject;
+import org.junit.After;
 import org.junit.Rule;
 import org.junit.Test;
 import org.jvnet.hudson.test.JenkinsRule;
@@ -44,6 +45,27 @@ public class FavoritingScmListenerTest {
         User user = User.getById("jdumay", false);
         assertNotNull(user);
         assertFalse(Favorites.isFavorite(user, job));
+    }
+
+    @Test
+    public void testAutoFavoriteForRegisteredUserWhenGloballyDisabled() throws Exception {
+        User jdumay = User.getById("jdumay", true);
+        assertNotNull(jdumay);
+
+        // Disable autofavorite
+        assertTrue(FavoritingScmListener.isEnabled());
+        System.setProperty(FavoritingScmListener.BLUEOCEAN_FEATURE_AUTOFAVORITE_ENABLED_PROPERTY, "false");
+        assertFalse(FavoritingScmListener.isEnabled());
+
+        WorkflowJob job = createAndRunPipeline();
+        User user = User.getById("jdumay", false);
+        assertNotNull(user);
+        assertFalse(Favorites.isFavorite(user, job));
+    }
+
+    @After
+    public void enableFeature() {
+        System.setProperty(FavoritingScmListener.BLUEOCEAN_FEATURE_AUTOFAVORITE_ENABLED_PROPERTY, "true");
     }
 
 //    @Test
