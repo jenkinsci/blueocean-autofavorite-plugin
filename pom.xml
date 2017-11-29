@@ -9,7 +9,7 @@
     </parent>
 
     <artifactId>blueocean-autofavorite</artifactId>
-    <version>1.2.0</version>
+    <version>1.2.1-SNAPSHOT</version>
 
     <name>Autofavorite for Blue Ocean</name>
     <description>Automatically favorites multibranch pipeline jobs when user is the author</description>
@@ -25,7 +25,7 @@
         <connection>scm:git:ssh://github.com/jenkinsci/blueocean-autofavorite-plugin.git</connection>
         <developerConnection>scm:git:ssh://git@github.com/jenkinsci/blueocean-autofavorite-plugin.git</developerConnection>
         <url>https://github.com/jenkinsci/blueocean-autofavorite-plugin</url>
-        <tag>blueocean-autofavorite-1.2.0</tag>
+        <tag>HEAD</tag>
     </scm>
 
     <licenses>
