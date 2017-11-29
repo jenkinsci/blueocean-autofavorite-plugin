@@ -12,10 +12,10 @@ import javax.annotation.Nonnull;
 
 public class FavoritingUserProperty extends UserProperty {
 
-    private boolean autofavoriteEnabled;
+    private Boolean autofavoriteEnabled;
 
     @DataBoundConstructor
-    public FavoritingUserProperty(boolean autofavoriteEnabled) {
+    public FavoritingUserProperty(Boolean autofavoriteEnabled) {
         this.autofavoriteEnabled = autofavoriteEnabled;
     }
 

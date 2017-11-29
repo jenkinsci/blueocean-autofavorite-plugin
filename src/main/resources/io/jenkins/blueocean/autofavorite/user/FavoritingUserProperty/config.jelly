@@ -2,8 +2,8 @@
 <j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:d="jelly:define" xmlns:l="/lib/layout"
          xmlns:t="/lib/hudson" xmlns:f="/lib/form">
   <f:block>
-    <f:entry name="auto-fav-enabled" field="enabled">
-        <f:checkbox title="${%autofavorite.autofavoriteEnabled}" name="auto-fav-enabled" checked="${instance.enabled}"/>
+    <f:entry name="auto-fav-enabled" field="autofavoriteEnabled">
+        <f:checkbox title="${%autofavorite.enabled}" name="autofavoriteEnabled" checked="${instance.autofavoriteEnabled}"/>
     </f:entry>
   </f:block>
 </j:jelly>
