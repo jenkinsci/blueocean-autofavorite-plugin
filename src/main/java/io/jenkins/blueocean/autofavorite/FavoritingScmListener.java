@@ -21,6 +21,7 @@ import hudson.plugins.git.util.BuildData;
 import hudson.scm.SCM;
 import hudson.scm.SCMRevisionState;
 import hudson.util.LogTaskListener;
+import io.jenkins.blueocean.autofavorite.user.FavoritingUserProperty;
 import jenkins.branch.MultiBranchProject;
 import org.apache.commons.io.IOUtils;
 import org.eclipse.jgit.errors.MissingObjectException;
@@ -95,6 +96,11 @@ public class FavoritingScmListener extends SCMListener {
 
         // User does not exist or is unknown
         if (User.getById(author.getId(), false) == null || User.getUnknown().equals(author)) {
+            return;
+        }
+
+        // If the user has disabled auto-favoriting then we should bail out
+        if (!FavoritingUserProperty.from(author).isAutofavoriteEnabled()) {
             return;
         }
 

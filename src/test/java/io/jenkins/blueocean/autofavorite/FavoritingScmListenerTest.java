@@ -4,6 +4,8 @@ import hudson.model.Result;
 import hudson.model.User;
 import hudson.plugins.favorite.Favorites;
 import java.util.concurrent.TimeUnit;
+
+import io.jenkins.blueocean.autofavorite.user.FavoritingUserProperty;
 import jenkins.branch.BranchSource;
 import jenkins.branch.MultiBranchProject.BranchIndexing;
 import jenkins.plugins.git.GitSCMSource;
@@ -27,6 +29,21 @@ public class FavoritingScmListenerTest {
         User user = User.getById("jdumay", false);
         assertNotNull(user);
         assertTrue(Favorites.isFavorite(user, job));
+    }
+
+    @Test
+    public void testAutoFavoriteForRegisteredUserWhenDisabled() throws Exception {
+        User jdumay = User.getById("jdumay", true);
+        assertNotNull(jdumay);
+
+        // Disable autofavorite
+        FavoritingUserProperty.from(jdumay).setAutofavoriteEnabled(false);
+        jdumay.save();
+
+        WorkflowJob job = createAndRunPipeline();
+        User user = User.getById("jdumay", false);
+        assertNotNull(user);
+        assertFalse(Favorites.isFavorite(user, job));
     }
 
 //    @Test
