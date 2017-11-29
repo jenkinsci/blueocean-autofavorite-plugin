@@ -23,6 +23,7 @@ import hudson.scm.SCMRevisionState;
 import hudson.util.LogTaskListener;
 import io.jenkins.blueocean.autofavorite.user.FavoritingUserProperty;
 import jenkins.branch.MultiBranchProject;
+import jenkins.util.SystemProperties;
 import org.apache.commons.io.IOUtils;
 import org.eclipse.jgit.errors.MissingObjectException;
 import org.jenkinsci.plugins.gitclient.Git;
@@ -46,6 +47,11 @@ public class FavoritingScmListener extends SCMListener {
 
     @Override
     public void onCheckout(Run<?, ?> build, SCM scm, FilePath workspace, TaskListener listener, @CheckForNull File changelogFile, @CheckForNull SCMRevisionState pollingBaseline) throws Exception {
+
+        if (!isEnabled()) {
+            return;
+        }
+
         // Look for the first build of a multibranch job
         if (!(build instanceof WorkflowRun
                 && ((WorkflowRun) build).getParent().getParent() instanceof MultiBranchProject
@@ -157,4 +163,10 @@ public class FavoritingScmListener extends SCMListener {
         }
         return Iterables.getOnlyElement(changeSets, null);
     }
+
+    static boolean isEnabled() {
+        return SystemProperties.getBoolean(BLUEOCEAN_FEATURE_AUTOFAVORITE_ENABLED_PROPERTY, true);
+    }
+
+    static final String BLUEOCEAN_FEATURE_AUTOFAVORITE_ENABLED_PROPERTY = "BLUEOCEAN_FEATURE_AUTOFAVORITE_ENABLED";
 }
