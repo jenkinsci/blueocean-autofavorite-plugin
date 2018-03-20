@@ -67,6 +67,11 @@ public class FavoritingScmListener extends SCMListener {
         }
 
         BuildData buildData = build.getAction(BuildData.class);
+        if (buildData == null) {
+            LOGGER.fine("No Git Build Data is present. Favoriting cannot be run.");
+            return;
+        }
+
         Revision lastBuiltRevision = buildData.getLastBuiltRevision();
         if (lastBuiltRevision == null) {
             return;

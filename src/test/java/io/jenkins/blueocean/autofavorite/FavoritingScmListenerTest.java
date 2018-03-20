@@ -5,6 +5,7 @@ import hudson.model.User;
 import hudson.plugins.favorite.Favorites;
 import java.util.concurrent.TimeUnit;
 
+import hudson.plugins.git.util.BuildData;
 import io.jenkins.blueocean.autofavorite.user.FavoritingUserProperty;
 import jenkins.branch.BranchSource;
 import jenkins.branch.MultiBranchProject.BranchIndexing;
@@ -63,6 +64,15 @@ public class FavoritingScmListenerTest {
         assertFalse(Favorites.isFavorite(user, job));
     }
 
+    @Test
+    public void testAutoFavoriteNullBuildData() throws Exception {
+        User.getById("jdumay", true);
+        WorkflowJob job = createAndRunPipeline(true);
+        User user = User.getById("jdumay", false);
+        assertNotNull(user);
+        assertFalse(Favorites.isFavorite(user, job));
+    }
+
     @After
     public void enableFeature() {
         System.setProperty(FavoritingScmListener.BLUEOCEAN_FEATURE_AUTOFAVORITE_ENABLED_PROPERTY, "true");
@@ -78,6 +88,10 @@ public class FavoritingScmListenerTest {
     }
 
     private WorkflowJob createAndRunPipeline() throws java.io.IOException, InterruptedException {
+        return createAndRunPipeline(false);
+    }
+
+    private WorkflowJob createAndRunPipeline(boolean removeBuildData) throws java.io.IOException, InterruptedException {
         WorkflowMultiBranchProject mbp = j.createProject(WorkflowMultiBranchProject.class, "WorkflowMultiBranchProject");
         GitSCMSource gitSCMSource = new GitSCMSource("https://github.com/i386/feedle.git");
         gitSCMSource.setCredentialsId("");
@@ -95,11 +109,17 @@ public class FavoritingScmListenerTest {
 
         WorkflowJob job = mbp.getItem("master");
         while (job.getBuilds().isEmpty()) {
-            Thread.sleep(TimeUnit.SECONDS.toMillis(1));
+            Thread.sleep(5);
         }
 
         WorkflowRun run = job.getBuildByNumber(1);
         assertNotNull(run);
+
+        if (removeBuildData) {
+            while (!run.removeActions(BuildData.class)) {
+                Thread.sleep(5);
+            }
+        }
 
 
         while (run.getResult() == null) {
