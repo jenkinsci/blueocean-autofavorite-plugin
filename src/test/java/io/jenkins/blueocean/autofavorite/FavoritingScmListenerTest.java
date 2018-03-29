@@ -115,16 +115,16 @@ public class FavoritingScmListenerTest {
         WorkflowRun run = job.getBuildByNumber(1);
         assertNotNull(run);
 
-        if (removeBuildData) {
-            while (!run.removeActions(BuildData.class)) {
+        while (run.getResult() == null) {
+            /* poll faster as long as we still need to removeBuildData */
+            if (removeBuildData) {
+                removeBuildData = !run.removeActions(BuildData.class);
                 Thread.sleep(5);
+            } else {
+                Thread.sleep(TimeUnit.SECONDS.toMillis(1));
             }
         }
 
-
-        while (run.getResult() == null) {
-            Thread.sleep(TimeUnit.SECONDS.toMillis(1));
-        }
         return job;
     }
 }
