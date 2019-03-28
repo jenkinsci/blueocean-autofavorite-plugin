@@ -23,7 +23,6 @@ import hudson.scm.SCMRevisionState;
 import hudson.util.LogTaskListener;
 import io.jenkins.blueocean.autofavorite.user.FavoritingUserProperty;
 import jenkins.branch.MultiBranchProject;
-import jenkins.util.SystemProperties;
 import org.apache.commons.io.IOUtils;
 import org.eclipse.jgit.errors.MissingObjectException;
 import org.jenkinsci.plugins.gitclient.Git;
@@ -170,7 +169,11 @@ public class FavoritingScmListener extends SCMListener {
     }
 
     static boolean isEnabled() {
-        return SystemProperties.getBoolean(BLUEOCEAN_FEATURE_AUTOFAVORITE_ENABLED_PROPERTY, true);
+        String value = System.getProperty(BLUEOCEAN_FEATURE_AUTOFAVORITE_ENABLED_PROPERTY);
+        if (value != null) {
+            return Boolean.valueOf(value);
+        }
+        return true;
     }
 
     static final String BLUEOCEAN_FEATURE_AUTOFAVORITE_ENABLED_PROPERTY = "BLUEOCEAN_FEATURE_AUTOFAVORITE_ENABLED";
