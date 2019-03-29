@@ -69,9 +69,11 @@ public class FavoritingScmListenerTest {
     public void testAutoFavoriteNullBuildData() throws Exception {
         User.getById("jdumay", true);
         WorkflowJob job = createAndRunPipeline(true);
+        WorkflowRun build = job.getBuildByNumber(1);
+        assertTrue("Build shouldn't have any data", build.getActions(BuildData.class).isEmpty());
         User user = User.getById("jdumay", false);
         assertNotNull(user);
-        assertFalse(Favorites.isFavorite(user, job));
+        assertFalse("User shouldn't have any favorite", Favorites.isFavorite(user, job));
     }
 
     @After
@@ -119,7 +121,7 @@ public class FavoritingScmListenerTest {
         while (run.getResult() == null) {
             /* poll faster as long as we still need to removeBuildData */
             if (removeBuildData) {
-                removeBuildData = !run.removeActions(BuildData.class);
+                run.removeActions(BuildData.class);
                 Thread.sleep(5);
             } else {
                 Thread.sleep(TimeUnit.SECONDS.toMillis(1));
