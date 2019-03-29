@@ -15,6 +15,7 @@ import org.jenkinsci.plugins.workflow.job.WorkflowJob;
 import org.jenkinsci.plugins.workflow.job.WorkflowRun;
 import org.jenkinsci.plugins.workflow.multibranch.WorkflowMultiBranchProject;
 import org.junit.After;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.jvnet.hudson.test.JenkinsRule;
@@ -78,8 +79,8 @@ public class FavoritingScmListenerTest {
         System.setProperty(FavoritingScmListener.BLUEOCEAN_FEATURE_AUTOFAVORITE_ENABLED_PROPERTY, "true");
     }
 
-//    @Test
-    /** Disabled because of https://issues.jenkins-ci.org/browse/JENKINS-39694 **/
+    @Ignore("JENKINS-39694")
+    @Test
     public void testAutoFavoriteForNonRegisteredUser() throws Exception {
         assertNull(User.getById("jdumay", false));
         WorkflowJob job = createAndRunPipeline();
