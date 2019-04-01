@@ -15,6 +15,7 @@ import org.jenkinsci.plugins.workflow.job.WorkflowJob;
 import org.jenkinsci.plugins.workflow.job.WorkflowRun;
 import org.jenkinsci.plugins.workflow.multibranch.WorkflowMultiBranchProject;
 import org.junit.After;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.jvnet.hudson.test.JenkinsRule;
@@ -68,9 +69,11 @@ public class FavoritingScmListenerTest {
     public void testAutoFavoriteNullBuildData() throws Exception {
         User.getById("jdumay", true);
         WorkflowJob job = createAndRunPipeline(true);
+        WorkflowRun build = job.getBuildByNumber(1);
+        assertTrue("Build shouldn't have any data", build.getActions(BuildData.class).isEmpty());
         User user = User.getById("jdumay", false);
         assertNotNull(user);
-        assertFalse(Favorites.isFavorite(user, job));
+        assertFalse("User shouldn't have any favorite", Favorites.isFavorite(user, job));
     }
 
     @After
@@ -78,8 +81,8 @@ public class FavoritingScmListenerTest {
         System.setProperty(FavoritingScmListener.BLUEOCEAN_FEATURE_AUTOFAVORITE_ENABLED_PROPERTY, "true");
     }
 
-//    @Test
-    /** Disabled because of https://issues.jenkins-ci.org/browse/JENKINS-39694 **/
+    @Ignore("JENKINS-39694")
+    @Test
     public void testAutoFavoriteForNonRegisteredUser() throws Exception {
         assertNull(User.getById("jdumay", false));
         WorkflowJob job = createAndRunPipeline();
@@ -118,7 +121,7 @@ public class FavoritingScmListenerTest {
         while (run.getResult() == null) {
             /* poll faster as long as we still need to removeBuildData */
             if (removeBuildData) {
-                removeBuildData = !run.removeActions(BuildData.class);
+                run.removeActions(BuildData.class);
                 Thread.sleep(5);
             } else {
                 Thread.sleep(TimeUnit.SECONDS.toMillis(1));
