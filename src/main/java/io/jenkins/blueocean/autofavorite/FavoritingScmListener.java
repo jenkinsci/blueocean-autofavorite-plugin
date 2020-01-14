@@ -93,7 +93,7 @@ public class FavoritingScmListener extends SCMListener {
                     first = null;
                 }
             } else {
-                LOGGER.log(Level.SEVERE, "Unexpected error when retrieving changeset", e);
+                LOGGER.log(Level.WARNING, "Unexpected error when retrieving changeset", e);
                 first = null;
             }
         }
