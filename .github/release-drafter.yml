@@ -1,0 +1,2 @@
+_extends: .github
+tag-template: blueocean-autofavorite-plugin-$NEXT_MINOR_VERSION
