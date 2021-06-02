@@ -171,7 +171,7 @@ public class FavoritingScmListener extends SCMListener {
     static boolean isEnabled() {
         String value = System.getProperty(BLUEOCEAN_FEATURE_AUTOFAVORITE_ENABLED_PROPERTY);
         if (value != null) {
-            return Boolean.valueOf(value);
+            return Boolean.parseBoolean(value);
         }
         return true;
     }
