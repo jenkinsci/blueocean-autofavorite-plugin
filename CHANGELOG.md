@@ -1,3 +1,5 @@
+Releases will be now available here [releases](https://github.com/jenkinsci/blueocean-autofavorite-plugin/releases)
+
 ### 1.2.4 - 1 April 2019
 
 -   [\#18](https://github.com/jenkinsci/blueocean-autofavorite-plugin/pull/18) -
