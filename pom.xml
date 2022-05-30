@@ -81,7 +81,7 @@
     <dependency>
       <groupId>org.jenkinsci.plugins</groupId>
       <artifactId>pipeline-model-definition</artifactId>
-      <version>1.2.2</version>
+      <version>2.2086.v12b_420f036e5</version>
       <scope>test</scope>
       <exclusions>
         <!-- Pulled by JTH -->
