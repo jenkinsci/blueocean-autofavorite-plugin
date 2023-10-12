@@ -19,7 +19,7 @@
   <properties>
     <java.level>8</java.level>
     <!-- jenkins -->
-    <jenkins.version>2.176.4</jenkins.version>
+    <jenkins.version>2.361.4</jenkins.version>
     <!-- security spotbugs -->
     <spotbugs.failOnError>false</spotbugs.failOnError>
   </properties>
@@ -109,8 +109,8 @@
     <dependencies>
       <dependency>
         <groupId>io.jenkins.tools.bom</groupId>
-        <artifactId>bom-2.176.x</artifactId>
-        <version>9</version>
+        <artifactId>bom-2.361.x</artifactId>
+        <version>2120.v89a_c54a_1e4f9</version>
         <scope>import</scope>
         <type>pom</type>
       </dependency>
