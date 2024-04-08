@@ -54,14 +54,6 @@
     <dependency>
       <groupId>org.jenkins-ci.plugins</groupId>
       <artifactId>git</artifactId>
-      <version>3.6.0</version>
-      <exclusions>
-        <!-- Upper bound dependencies error fix -->
-        <exclusion>
-          <groupId>org.jenkins-ci</groupId>
-          <artifactId>annotation-indexer</artifactId>
-        </exclusion>
-      </exclusions>
     </dependency>
     <dependency>
       <groupId>org.jenkins-ci.plugins</groupId>
@@ -90,6 +82,14 @@
         </exclusion>
       </exclusions>
     </dependency>
+
+    <dependency>
+      <groupId>io.jenkins.plugins</groupId>
+      <artifactId>pipeline-groovy-lib</artifactId>
+      <version>656.va_a_ceeb_6ffb_f7</version>
+      <optional>true</optional>
+    </dependency>
+
     <!-- Upper bound dependencies error fix -->
     <dependency>
       <groupId>org.jenkins-ci.plugins</groupId>
