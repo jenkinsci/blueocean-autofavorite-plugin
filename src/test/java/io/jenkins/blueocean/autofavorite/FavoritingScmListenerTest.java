@@ -1,5 +1,6 @@
 package io.jenkins.blueocean.autofavorite;
 
+import hudson.Functions;
 import hudson.model.Result;
 import hudson.model.User;
 import hudson.plugins.favorite.Favorites;
@@ -20,6 +21,7 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.jvnet.hudson.test.JenkinsRule;
 import static org.junit.Assert.*;
+import static org.junit.Assume.assumeFalse;
 
 public class FavoritingScmListenerTest {
     @Rule
@@ -27,6 +29,7 @@ public class FavoritingScmListenerTest {
 
     @Test
     public void testAutoFavoriteForRegisteredUser() throws Exception {
+        assumeFalse(Functions.isWindows());
         User.getById("jdumay", true);
         WorkflowJob job = createAndRunPipeline();
         User user = User.getById("jdumay", false);
@@ -36,6 +39,7 @@ public class FavoritingScmListenerTest {
 
     @Test
     public void testAutoFavoriteForRegisteredUserWhenDisabled() throws Exception {
+        assumeFalse(Functions.isWindows());
         User jdumay = User.getById("jdumay", true);
         assertNotNull(jdumay);
 
@@ -51,6 +55,7 @@ public class FavoritingScmListenerTest {
 
     @Test
     public void testAutoFavoriteForRegisteredUserWhenGloballyDisabled() throws Exception {
+        assumeFalse(Functions.isWindows());
         User jdumay = User.getById("jdumay", true);
         assertNotNull(jdumay);
 
@@ -67,6 +72,7 @@ public class FavoritingScmListenerTest {
 
     @Test
     public void testAutoFavoriteNullBuildData() throws Exception {
+        assumeFalse(Functions.isWindows());
         User.getById("jdumay", true);
         WorkflowJob job = createAndRunPipeline(true);
         WorkflowRun build = job.getBuildByNumber(1);
@@ -84,6 +90,7 @@ public class FavoritingScmListenerTest {
     @Ignore("JENKINS-39694")
     @Test
     public void testAutoFavoriteForNonRegisteredUser() throws Exception {
+        assumeFalse(Functions.isWindows());
         assertNull(User.getById("jdumay", false));
         WorkflowJob job = createAndRunPipeline();
         User user = User.getById("jdumay", false);
