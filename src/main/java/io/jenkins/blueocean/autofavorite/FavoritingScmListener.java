@@ -1,6 +1,18 @@
 package io.jenkins.blueocean.autofavorite;
 
+import java.io.File;
+import java.io.IOException;
+import java.io.StringReader;
+import java.io.StringWriter;
+import java.util.List;
+import java.util.concurrent.TimeUnit;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import java.util.stream.Collectors;
+import javax.annotation.CheckForNull;
+
 import com.google.common.collect.Iterables;
+import com.google.common.collect.Sets;
 import hudson.EnvVars;
 import hudson.Extension;
 import hudson.FilePath;
@@ -17,27 +29,28 @@ import hudson.plugins.git.GitException;
 import hudson.plugins.git.GitSCM;
 import hudson.plugins.git.GitTool;
 import hudson.plugins.git.Revision;
+import hudson.plugins.git.UserRemoteConfig;
 import hudson.plugins.git.util.BuildData;
 import hudson.scm.SCM;
 import hudson.scm.SCMRevisionState;
 import hudson.util.LogTaskListener;
 import io.jenkins.blueocean.autofavorite.user.FavoritingUserProperty;
 import jenkins.branch.MultiBranchProject;
+import jenkins.model.Jenkins;
+import jenkins.plugins.git.GitSCMSource;
+import jenkins.scm.api.SCMSource;
 import org.apache.commons.io.IOUtils;
 import org.eclipse.jgit.errors.MissingObjectException;
 import org.jenkinsci.plugins.gitclient.Git;
 import org.jenkinsci.plugins.gitclient.GitClient;
 import org.jenkinsci.plugins.workflow.job.WorkflowRun;
-
-import javax.annotation.CheckForNull;
-import java.io.File;
-import java.io.IOException;
-import java.io.StringReader;
-import java.io.StringWriter;
-import java.util.List;
-import java.util.concurrent.TimeUnit;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+import org.jenkinsci.plugins.workflow.libs.FolderLibraries;
+import org.jenkinsci.plugins.workflow.libs.GlobalLibraries;
+import org.jenkinsci.plugins.workflow.libs.LibrariesAction;
+import org.jenkinsci.plugins.workflow.libs.LibraryConfiguration;
+import org.jenkinsci.plugins.workflow.libs.LibraryRecord;
+import org.jenkinsci.plugins.workflow.libs.LibraryRetriever;
+import org.jenkinsci.plugins.workflow.libs.SCMSourceRetriever;
 
 @Extension
 public class FavoritingScmListener extends SCMListener {
@@ -65,7 +78,23 @@ public class FavoritingScmListener extends SCMListener {
             return;
         }
 
-        BuildData buildData = build.getAction(BuildData.class);
+        final List<String> urls = ((GitSCM) scm).getUserRemoteConfigs().stream()
+                                                .map(UserRemoteConfig::getUrl)
+                                                .collect(Collectors.toList());
+
+        final List<BuildData> buildDataList = build.getActions(BuildData.class);
+        BuildData buildData = buildDataList.stream()
+                                           .filter(bd -> !Sets.intersection(Sets.newHashSet(urls), bd.remoteUrls).isEmpty())
+                                           .findFirst()
+                                           .orElse(null);
+
+        if (Jenkins.get().getPlugin("pipeline-groovy-lib") != null) {
+            if (shouldSkipLibrariesRepository(build, urls)) {
+                LOGGER.fine("Remote repository is for a Workflow Library. Skipping auto favoriting.");
+                return;
+            }
+        }
+
         if (buildData == null) {
             LOGGER.fine("No Git Build Data is present. Favoriting cannot be run.");
             return;
@@ -133,6 +162,51 @@ public class FavoritingScmListener extends SCMListener {
         } catch (FavoriteException e) {
             LOGGER.log(Level.SEVERE, "Couldn't favourite " + job.getFullName() + " for " + author, e);
         }
+    }
+
+    private boolean shouldSkipLibrariesRepository(final Run<?, ?> build, final List<String> urls) {
+        final LibrariesAction librariesAction = build.getAction(LibrariesAction.class);
+        if (librariesAction != null && !librariesAction.getLibraries().isEmpty()) {
+            for (final LibraryRecord libraryRecord : librariesAction.getLibraries()) {
+                final String name = libraryRecord.getName();
+
+                if (libraryMatchesUrls(urls, name, GlobalLibraries.get().getLibraries())) {
+                    return true;
+                }
+
+                final MultiBranchProject<?, ?> multiBranchProject = (MultiBranchProject<?, ?>) ((WorkflowRun) build).getParent().getParent();
+                for (Object property : multiBranchProject.getProperties()) {
+                    if (property instanceof FolderLibraries) {
+                        FolderLibraries folderLibraries = (FolderLibraries) property;
+                        final List<LibraryConfiguration> libraryConfigurations = folderLibraries.getLibraries();
+                        if (libraryMatchesUrls(urls, name, libraryConfigurations)) {
+                            return true;
+                        }
+                    }
+                }
+            }
+        }
+        return false;
+    }
+
+    private boolean libraryMatchesUrls(final List<String> urls, final String name, final List<LibraryConfiguration> libraryConfigurations) {
+        for (final LibraryConfiguration library : libraryConfigurations) {
+            if (library.getName().equals(name)) {
+                final LibraryRetriever retriever = library.getRetriever();
+                if (retriever instanceof SCMSourceRetriever) {
+                    final SCMSourceRetriever scmSourceRetriever = (SCMSourceRetriever) retriever;
+                    final SCMSource scmSource = scmSourceRetriever.getScm();
+                    if (scmSource instanceof GitSCMSource) {
+                        final GitSCMSource gitSCMSource = (GitSCMSource) scmSource;
+                        final String remote = gitSCMSource.getRemote();
+                        if (urls.contains(remote)) {
+                            return true;
+                        }
+                    }
+                }
+            }
+        }
+        return false;
     }
 
     private GitChangeSet getChangeSet(GitSCM scm, FilePath workspace, Revision lastBuiltRevision, TaskListener listener) throws IOException, InterruptedException {
